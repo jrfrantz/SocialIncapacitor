@@ -25,8 +25,6 @@ public class MainActivity extends Activity implements BufferCallBack {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        //a = new Audio();
-        //AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
     	audiosource = new AudioBufferManager(DELAY_TIME, this);
     	audiosource.start();
     	
