@@ -1,16 +1,24 @@
 package edu.visa; 
 
+import java.io.IOException;
+
 import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
+import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class AccelMonitor implements SensorEventListener {
 	private final SensorManager mSensorManager;
     private final Sensor mAccelerometer;
+    private Activity _a;
     private TextView t;
+    private MediaPlayer drone;
     
     private float ox, oy, oz; //old x y z
     private float x, y, z;
@@ -20,21 +28,33 @@ public class AccelMonitor implements SensorEventListener {
     
     private float mx, my, mz; // max change from any poll to the next 
     
-	public AccelMonitor(Activity a, TextView t) {
+	public AccelMonitor(Activity a, TextView t, MediaPlayer drone) {
 		mSensorManager = (SensorManager) a.getSystemService(a.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mAccelerometer.getMaximumRange(); //TODO something with this
+        this._a = a;
         this.t = t;
+        this.drone = drone;
+        drone.setLooping(true);
+        drone.start();
 	}
 
 	
 	
 	protected void onResume() {
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        //drone.reset();
+/*        try {
+			drone.setDataSource("android.resource://" + _a.getPackageName() + "/"+ R.raw.black_juggernaut_black_mirror);
+		} catch (IOException e) {
+			Toast.makeText(_a.getApplicationContext(), "Failed to reinitialize drone!", Toast.LENGTH_LONG).show();
+			e.printStackTrace();
+		}*/
     }
 
     protected void onPause() {
         mSensorManager.unregisterListener(this);
+        drone.release();
     }
 
 	@Override
@@ -64,6 +84,13 @@ public class AccelMonitor implements SensorEventListener {
 				r1 +"\t" + r2 + "\t" + r3 + "\n" +
 				(r1-or1) +"\t" + (r2-or2) + "\t" + (r3-or3) + "\n"
 		);
+		
+		
+		// use new data to change the drone volume
+		float max = event.sensor.getMaximumRange();
+		drone.setVolume(8*Math.abs(x)/max, 8*Math.abs(y)/max);
+		Log.d("Accel", ""+ (x/max) + ", " + (y/max)+"" );
+		
 		
 	}
 

@@ -1,16 +1,16 @@
 package edu.visa;
 
-import edu.visa.AudioBufferManager.BufferCallBack;
 import android.app.Activity;
-import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
+import android.media.MediaPlayer;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
+import edu.visa.AudioBufferManager.BufferCallBack;
 
 public class MainActivity extends Activity implements BufferCallBack {
 	public static int AudioSessionID; //compatibility w github thing
@@ -19,6 +19,7 @@ public class MainActivity extends Activity implements BufferCallBack {
 	static int DELAY_TIME = 150;
 	Audio a;
 	AudioBufferManager audiosource;
+	MediaPlayer drone; //plays drone audio
 	AccelMonitor accelmon;
     /** Called when the activity is first created. */
     @Override
@@ -29,7 +30,9 @@ public class MainActivity extends Activity implements BufferCallBack {
     	audiosource.start();
     	
     	TextView tv = (TextView) findViewById(R.id.hellobox);
-    	accelmon = new AccelMonitor(this, tv);
+    	
+    	drone = MediaPlayer.create(getApplicationContext(), R.raw.black_juggernaut_black_mirror);
+    	accelmon = new AccelMonitor(this, tv, drone);
     }
     
     public void onResume() {
@@ -38,6 +41,7 @@ public class MainActivity extends Activity implements BufferCallBack {
     }
     public void onPause() {
     	super.onPause();
+    	audiosource.interrupt();
     	accelmon.onPause();
     	//a.close();
     }
