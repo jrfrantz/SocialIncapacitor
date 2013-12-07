@@ -28,6 +28,8 @@ public class AccelMonitor implements SensorEventListener {
     
     private float mx, my, mz; // max change from any poll to the next 
     
+    private float lmx, lmy, lmz; //local maximum of change from one poll to the next
+    
 	public AccelMonitor(Activity a, TextView t, MediaPlayer drone) {
 		mSensorManager = (SensorManager) a.getSystemService(a.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -39,17 +41,8 @@ public class AccelMonitor implements SensorEventListener {
         drone.start();
 	}
 
-	
-	
 	protected void onResume() {
         mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        //drone.reset();
-/*        try {
-			drone.setDataSource("android.resource://" + _a.getPackageName() + "/"+ R.raw.black_juggernaut_black_mirror);
-		} catch (IOException e) {
-			Toast.makeText(_a.getApplicationContext(), "Failed to reinitialize drone!", Toast.LENGTH_LONG).show();
-			e.printStackTrace();
-		}*/
     }
 
     protected void onPause() {
@@ -70,10 +63,13 @@ public class AccelMonitor implements SensorEventListener {
 		or1 = r1; or2 = r2; or3 = r3;
 		r1 = x*x + y*y; r2 = x*x+z*z; r3 = y*y+z*z;
 		
-		
-		if ( Math.abs(x - ox) > mx) mx = Math.abs(x-ox);
-		if (Math.abs(y-oy) > my) my = Math.abs(y-oy);
-		if (Math.abs(z-oz) > mz) mz = Math.abs(z-oz);
+		float dx, dy, dz;
+		dx = Math.abs(x-ox);
+		dy = Math.abs(y-oy);
+		dz = Math.abs(z-oz);
+		if (dx > mx) mx = Math.abs(x-ox);
+		if (dy > my) my = Math.abs(y-oy);
+		if (dz > mz) mz = Math.abs(z-oz);
 		
 		
 		t.setText(
@@ -88,9 +84,24 @@ public class AccelMonitor implements SensorEventListener {
 		
 		// use new data to change the drone volume
 		float max = event.sensor.getMaximumRange();
-		drone.setVolume(8*Math.abs(x)/max, 8*Math.abs(y)/max);
-		Log.d("Accel", ""+ (x/max) + ", " + (y/max)+"" );
+		//drone.setVolume(8*Math.abs(x)/max, 8*Math.abs(y)/max);
+		//Log.d("Accel", ""+ (x/max) + ", " + (y/max)+"" );
 		
+		// volume will have a "shadow" - local max (if not increased), decreases geometrically
+		boolean changed = false;
+		float GEOM = .97f;
+		if (dx > lmx) {lmx = dx; changed = true;}
+		if (dy > lmy) {lmy = dy; changed = true;}
+		if (dz > lmz) {lmz = dz; changed = true;}
+		if (!changed) {
+			lmx *= GEOM;
+			lmy *= GEOM;
+			lmz *= GEOM;
+		}
+		float leftEar = lmx*lmx + lmz*lmz;
+		float rightEar = lmy*lmy + lmz*lmz;
+		Log.i("Volume", ""+leftEar+", "+rightEar);
+		drone.setVolume(leftEar*.5f, rightEar*.5f);
 		
 	}
 

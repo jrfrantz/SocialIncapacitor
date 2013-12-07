@@ -1,6 +1,7 @@
 package edu.visa;
 
 import android.app.Activity;
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -8,7 +9,10 @@ import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.TextView;
 import edu.visa.AudioBufferManager.BufferCallBack;
 
@@ -21,6 +25,8 @@ public class MainActivity extends Activity implements BufferCallBack {
 	AudioBufferManager audiosource;
 	MediaPlayer drone; //plays drone audio
 	AccelMonitor accelmon;
+	
+	WakeLock wl;
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,16 +39,21 @@ public class MainActivity extends Activity implements BufferCallBack {
     	
     	drone = MediaPlayer.create(getApplicationContext(), R.raw.black_juggernaut_black_mirror);
     	accelmon = new AccelMonitor(this, tv, drone);
+    	
+    	wl = ((PowerManager) this.getApplicationContext().getSystemService(Context.POWER_SERVICE))
+    			.newWakeLock(PowerManager.FULL_WAKE_LOCK, this.getClass().toString());
     }
     
     public void onResume() {
     	super.onResume();
     	accelmon.onResume();
+    	wl.acquire();
     }
     public void onPause() {
     	super.onPause();
     	audiosource.interrupt();
     	accelmon.onPause();
+    	wl.release();
     	//a.close();
     }
 	@Override

@@ -3,6 +3,7 @@ package edu.visa;
 import java.io.IOException;
 import java.util.Arrays;
 
+import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -25,6 +26,7 @@ public class AudioBufferManager extends Thread{
 	private static BufferCallBack mCallBack;
 	double delay;
 
+	@SuppressLint("NewApi")
 	public AudioBufferManager(int time, BufferCallBack callback) {
 		mCallBack = callback;
 		delay=time;
